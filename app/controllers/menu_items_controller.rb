@@ -1,70 +1,55 @@
 class MenuItemsController < ApplicationController
-  before_action :set_menu_item, only: %i[ show edit update destroy ]
+  before_action :set_menu_item, only: %i[ show update destroy ]
 
-  # GET /menu_items or /menu_items.json
+  # GET /menu_items
   def index
     @menu_items = MenuItem.all
+    render json: @menu_items
   end
 
-  # GET /menu_items/1 or /menu_items/1.json
+  # GET /menu_items/1
   def show
+    render json: @menu_item
   end
 
-  # GET /menu_items/new
-  def new
-    @menu_item = MenuItem.new
-  end
-
-  # GET /menu_items/1/edit
-  def edit
-  end
-
-  # POST /menu_items or /menu_items.json
+  # POST /menu_items
   def create
     @menu_item = MenuItem.new(menu_item_params)
 
-    respond_to do |format|
-      if @menu_item.save
-        format.html { redirect_to @menu_item, notice: "Menu item was successfully created." }
-        format.json { render :show, status: :created, location: @menu_item }
-      else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @menu_item.errors, status: :unprocessable_entity }
-      end
+    if @menu_item.save
+      render json: @menu_item, status: :created, location: @menu_item
+    else
+      render json: { errors: @menu_item.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  # PATCH/PUT /menu_items/1 or /menu_items/1.json
+  # PATCH/PUT /menu_items/1
   def update
-    respond_to do |format|
-      if @menu_item.update(menu_item_params)
-        format.html { redirect_to @menu_item, notice: "Menu item was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @menu_item }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @menu_item.errors, status: :unprocessable_entity }
-      end
+    if @menu_item.update(menu_item_params)
+      render json: @menu_item, status: :ok
+    else
+      render json: { errors: @menu_item.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  # DELETE /menu_items/1 or /menu_items/1.json
+  # DELETE /menu_items/1
   def destroy
     @menu_item.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to menu_items_path, notice: "Menu item was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
-    end
+    head :no_content
+  rescue ActiveRecord::RecordNotDestroyed => e
+    render json: { errors: e.message }, status: :unprocessable_entity
   end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_menu_item
       @menu_item = MenuItem.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Menu item not found" }, status: :not_found
     end
 
     # Only allow a list of trusted parameters through.
     def menu_item_params
-      params.require(:menu_item).permit(:name, :price)
+      params.require(:menu_item).permit(:name, :price, :menu_id)
     end
 end

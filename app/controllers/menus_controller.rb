@@ -1,66 +1,51 @@
 class MenusController < ApplicationController
-  before_action :set_menu, only: %i[ show edit update destroy ]
+  before_action :set_menu, only: %i[ show update destroy ]
 
-  # GET /menus or /menus.json
+  # GET /menus
   def index
     @menus = Menu.all
+    render json: @menus
   end
 
-  # GET /menus/1 or /menus/1.json
+  # GET /menus/1
   def show
+    render json: @menu
   end
 
-  # GET /menus/new
-  def new
-    @menu = Menu.new
-  end
-
-  # GET /menus/1/edit
-  def edit
-  end
-
-  # POST /menus or /menus.json
+  # POST /menus
   def create
     @menu = Menu.new(menu_params)
 
-    respond_to do |format|
-      if @menu.save
-        format.html { redirect_to @menu, notice: "Menu was successfully created." }
-        format.json { render :show, status: :created, location: @menu }
-      else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @menu.errors, status: :unprocessable_entity }
-      end
+    if @menu.save
+      render json: @menu, status: :created, location: @menu
+    else
+      render json: { errors: @menu.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  # PATCH/PUT /menus/1 or /menus/1.json
+  # PATCH/PUT /menus/1
   def update
-    respond_to do |format|
-      if @menu.update(menu_params)
-        format.html { redirect_to @menu, notice: "Menu was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @menu }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @menu.errors, status: :unprocessable_entity }
-      end
+    if @menu.update(menu_params)
+      render json: @menu, status: :ok
+    else
+      render json: { errors: @menu.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  # DELETE /menus/1 or /menus/1.json
+  # DELETE /menus/1
   def destroy
     @menu.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to menus_path, notice: "Menu was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
-    end
+    head :no_content
+  rescue ActiveRecord::RecordNotDestroyed => e
+    render json: { errors: e.message }, status: :unprocessable_entity
   end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_menu
       @menu = Menu.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Menu not found" }, status: :not_found
     end
 
     # Only allow a list of trusted parameters through.
