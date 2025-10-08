@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: popmenu_development
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - popmenu_network
+
+  web:
+    build: .
+    volumes:
+      - .:/popmenu:cached
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: popmenu_development
+    depends_on:
+      - db
+    networks:
+      - popmenu_network
+
+networks:
+  popmenu_network:
+    driver: bridge
